@@ -12,6 +12,9 @@ struct RatingEntry: Identifiable {
 struct ContentView: View {
     @State private var ratings: [RatingEntry] = []
     @State private var inputDigits = ""
+    @Environment(\.verticalSizeClass) private var vSizeClass
+
+    private var isLandscape: Bool { vSizeClass == .compact }
 
     // Combined formula: 1 − ∏(1 − Aᵢ/100)
     var combinedRating: Double {
@@ -30,26 +33,65 @@ struct ContentView: View {
         ZStack {
             ambientBackground
 
-            VStack(spacing: 0) {
-                headerBar
-                    .padding(.horizontal, 24)
-                    .padding(.top, 56)
-
-                resultDisplay
-                    .padding(.top, 4)
-
-                Spacer()
-
-                ratingsScroll
-
-                Spacer()
-
-                numpadPanel
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 10)
+            if isLandscape {
+                landscapeLayout
+            } else {
+                portraitLayout
             }
         }
         .ignoresSafeArea()
+    }
+
+    // MARK: - Layouts
+
+    var portraitLayout: some View {
+        VStack(spacing: 0) {
+            headerBar
+                .padding(.horizontal, 24)
+                .padding(.top, 56)
+
+            resultDisplay
+                .padding(.top, 4)
+
+            Spacer()
+
+            ratingsScroll
+
+            Spacer()
+
+            numpadPanel
+                .padding(.horizontal, 12)
+                .padding(.bottom, 10)
+        }
+    }
+
+    var landscapeLayout: some View {
+        HStack(spacing: 16) {
+            // Left: header + result + ratings
+            VStack(spacing: 0) {
+                headerBar
+                    .padding(.top, 16)
+                    .padding(.horizontal, 4)
+
+                Spacer(minLength: 0)
+
+                resultDisplay
+
+                Spacer(minLength: 0)
+
+                ratingsScroll
+                    .padding(.bottom, 4)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.leading, 32)
+
+            // Right: numpad
+            numpadPanel
+                .frame(maxWidth: 360)
+                .padding(.trailing, 24)
+                .padding(.vertical, 14)
+        }
+        .padding(.horizontal, 8)
     }
 
     // MARK: - Background
@@ -99,16 +141,16 @@ struct ContentView: View {
     // MARK: - Result Display
 
     var resultDisplay: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: isLandscape ? 2 : 6) {
             Text("COMBINED IMPAIRMENT")
-                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                .tracking(3.0)
+                .font(.system(size: isLandscape ? 14 : 20, weight: .semibold, design: .rounded))
+                .tracking(isLandscape ? 2.2 : 3.0)
                 .foregroundStyle(.white.opacity(0.62))
-                .padding(.top, 44)
+                .padding(.top, isLandscape ? 0 : 44)
 
             HStack(alignment: .firstTextBaseline, spacing: 0) {
                 Text(ratings.isEmpty ? "—" : "\(roundedResult)")
-                    .font(.system(size: 100, weight: .thin, design: .rounded))
+                    .font(.system(size: isLandscape ? 76 : 100, weight: .thin, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(.white)
                     .contentTransition(.numericText())
@@ -116,22 +158,22 @@ struct ContentView: View {
 
                 if !ratings.isEmpty {
                     Text("%")
-                        .font(.system(size: 44, weight: .thin, design: .rounded))
+                        .font(.system(size: isLandscape ? 32 : 44, weight: .thin, design: .rounded))
                         .foregroundStyle(.white.opacity(0.52))
                         .padding(.leading, 3)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, isLandscape ? 6 : 8)
                 }
             }
 
             subtitleText
-                .font(.system(size: 20, weight: .regular, design: .rounded))
+                .font(.system(size: isLandscape ? 14 : 20, weight: .regular, design: .rounded))
                 .foregroundStyle(.white.opacity(0.52))
                 .animation(.easeInOut(duration: 0.2), value: ratings.count)
 
             Text("A + B(1 − A)")
-                .font(.system(size: 15, weight: .light, design: .monospaced))
+                .font(.system(size: isLandscape ? 12 : 15, weight: .light, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.38))
-                .padding(.top, 10)
+                .padding(.top, isLandscape ? 4 : 10)
         }
     }
 
@@ -181,7 +223,7 @@ struct ContentView: View {
     var numpadPanel: some View {
         VStack(spacing: 0) {
             inputPreview
-                .padding(.vertical, 18)
+                .padding(.vertical, isLandscape ? 8 : 18)
 
             Rectangle()
                 .fill(.white.opacity(0.08))
@@ -189,9 +231,9 @@ struct ContentView: View {
                 .padding(.horizontal, 20)
 
             numpadGrid
-                .padding(.top, 21)
-                .padding(.bottom, 22)
-                .padding(.horizontal, 18)
+                .padding(.top, isLandscape ? 10 : 21)
+                .padding(.bottom, isLandscape ? 12 : 22)
+                .padding(.horizontal, isLandscape ? 12 : 18)
         }
         .background {
             RoundedRectangle(cornerRadius: 42, style: .continuous)
@@ -219,17 +261,17 @@ struct ContentView: View {
             Spacer()
             if inputDigits.isEmpty {
                 Text("—")
-                    .font(.system(size: 54, weight: .thin, design: .rounded))
+                    .font(.system(size: isLandscape ? 38 : 54, weight: .thin, design: .rounded))
                     .foregroundStyle(.white.opacity(0.36))
             } else {
                 Text(inputDigits)
-                    .font(.system(size: 54, weight: .thin, design: .rounded))
+                    .font(.system(size: isLandscape ? 38 : 54, weight: .thin, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(.white)
                     .contentTransition(.numericText())
                     .animation(.spring(response: 0.24, dampingFraction: 0.8), value: inputDigits)
                 Text("%")
-                    .font(.system(size: 28, weight: .thin, design: .rounded))
+                    .font(.system(size: isLandscape ? 22 : 28, weight: .thin, design: .rounded))
                     .foregroundStyle(.white.opacity(0.5))
                     .padding(.bottom, 3)
                     .padding(.leading, 3)
@@ -246,14 +288,15 @@ struct ContentView: View {
     ]
 
     var numpadGrid: some View {
-        VStack(spacing: 9) {
+        VStack(spacing: isLandscape ? 7 : 9) {
             ForEach(keyRows.indices, id: \.self) { i in
-                HStack(spacing: 9) {
+                HStack(spacing: isLandscape ? 7 : 9) {
                     ForEach(keyRows[i], id: \.self) { key in
                         NumpadKeyView(
                             key: key,
                             isEnabled: keyEnabled(key),
-                            isAdd: key == "+"
+                            isAdd: key == "+",
+                            compact: isLandscape
                         ) {
                             handleKey(key)
                         }
@@ -334,6 +377,7 @@ struct NumpadKeyView: View {
     let key: String
     let isEnabled: Bool
     let isAdd: Bool
+    var compact: Bool = false
     let action: () -> Void
 
     var body: some View {
@@ -343,7 +387,7 @@ struct NumpadKeyView: View {
                 keyLabel
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 66)
+            .frame(height: compact ? 46 : 66)
         }
         .buttonStyle(GlassButtonStyle())
         .disabled(!isEnabled)
