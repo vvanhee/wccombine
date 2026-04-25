@@ -1,17 +1,11 @@
-//
-//  WCCombineApp.swift
-//  WCCombine
-//
-//  Created by Victor Van Hee on 4/20/26.
-//
-
 import SwiftUI
 
 @main
-struct WCCombineApp: App {
+struct ImpairmentCombinerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(.dark)
         }
     }
 }
